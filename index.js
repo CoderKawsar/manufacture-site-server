@@ -73,6 +73,12 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/reviews", async (req, res) => {
+      const reviewData = req.body;
+      const result = await reviewsCollection.insertOne(reviewData);
+      res.send(result);
+    });
+
     // GET all orders data of an user
     app.get("/orders/:uid", async (req, res) => {
       const searchedUid = req.params.uid;
