@@ -25,9 +25,10 @@ async function run() {
     const toolsCollection = client.db("manufacturer").collection("tools");
     const reviewsCollection = client.db("manufacturer").collection("reviews");
     const ordersCollection = client.db("manufacturer").collection("orders");
+    const usersCollection = client.db("manufacturer").collection("users");
 
     app.get("/", (req, res) => {
-      res.send("Hello World!");
+      res.send("Yay!");
     });
 
     // GET all tools data
@@ -72,11 +73,59 @@ async function run() {
       res.send(result);
     });
 
+    // GET all orders data of an user
+    app.get("/orders/:uid", async (req, res) => {
+      const searchedUid = req.params.uid;
+      const query = { uid: searchedUid };
+      const cursor = ordersCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
+    });
+
     // POST order data to db
     app.post("/orders", async (req, res) => {
       const orderData = req.body;
       const result = await ordersCollection.insertOne(orderData);
       res.send(result);
+    });
+
+    // DELETE an order
+    app.delete("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await ordersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // Upsert User info
+    app.put("/user/:uid", async (req, res) => {
+      const uidToChange = req.params.uid;
+      const userData = req.body;
+      const filter = { uid: uidToChange };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          uid: userData.uid,
+          education: userData.education,
+          location: userData.location,
+          phone: userData.phone,
+          linkedinProfileLink: userData.linkedinProfileLink,
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    // Get the user data
+    app.get("/user/:uid", async (req, res) => {
+      const uidToGet = req.params.uid;
+      const query = { uid: uidToGet };
+      const user = await usersCollection.findOne(query);
+      res.send(user);
     });
   } finally {
     // await client.close();
