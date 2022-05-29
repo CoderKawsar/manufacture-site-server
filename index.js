@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const { ObjectId } = require("mongodb");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -23,12 +24,13 @@ async function run() {
 
     const toolsCollection = client.db("manufacturer").collection("tools");
     const reviewsCollection = client.db("manufacturer").collection("reviews");
+    const ordersCollection = client.db("manufacturer").collection("orders");
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
     });
 
-    // GET tools data
+    // GET all tools data
     app.get("/tools", async (req, res) => {
       const total = parseInt(req.query.total);
       const query = {};
@@ -45,6 +47,14 @@ async function run() {
       res.send(result);
     });
 
+    // GET single tool data based on id
+    app.get("/tools/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const tool = await toolsCollection.findOne(query);
+      res.send(tool);
+    });
+
     // GET reviews data
     app.get("/reviews", async (req, res) => {
       const total = parseInt(req.query.total);
@@ -59,6 +69,13 @@ async function run() {
       } else {
         result = await cursor.toArray();
       }
+      res.send(result);
+    });
+
+    // POST order data to db
+    app.post("/orders", async (req, res) => {
+      const orderData = req.body;
+      const result = await ordersCollection.insertOne(orderData);
       res.send(result);
     });
   } finally {
