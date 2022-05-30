@@ -56,6 +56,13 @@ async function run() {
       res.send(tool);
     });
 
+    // POST a tool/product
+    app.post("/tools", async (req, res) => {
+      const toolData = req.body;
+      const result = await toolsCollection.insertOne(toolData);
+      res.send(result);
+    });
+
     // GET reviews data
     app.get("/reviews", async (req, res) => {
       const total = parseInt(req.query.total);
@@ -73,10 +80,19 @@ async function run() {
       res.send(result);
     });
 
+    // POST a review
     app.post("/reviews", async (req, res) => {
       const reviewData = req.body;
       const result = await reviewsCollection.insertOne(reviewData);
       res.send(result);
+    });
+
+    // GET all orders
+    app.get("/orders", async (req, res) => {
+      const query = {};
+      const cursor = await ordersCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
     });
 
     // GET all orders data of an user
@@ -103,6 +119,22 @@ async function run() {
       res.send(result);
     });
 
+    // GET all users
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const cursor = usersCollection.find(query);
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
+    // Get the user data
+    app.get("/user/:uid", async (req, res) => {
+      const uidToGet = req.params.uid;
+      const query = { uid: uidToGet };
+      const user = await usersCollection.findOne(query);
+      res.send(user);
+    });
+
     // Upsert User info
     app.put("/user/:uid", async (req, res) => {
       const uidToChange = req.params.uid;
@@ -112,6 +144,9 @@ async function run() {
       const updateDoc = {
         $set: {
           uid: userData.uid,
+          name: userData.name,
+          email: userData.email,
+          photoURL: userData.photoURL,
           education: userData.education,
           location: userData.location,
           phone: userData.phone,
@@ -126,12 +161,15 @@ async function run() {
       res.send(result);
     });
 
-    // Get the user data
-    app.get("/user/:uid", async (req, res) => {
-      const uidToGet = req.params.uid;
-      const query = { uid: uidToGet };
-      const user = await usersCollection.findOne(query);
-      res.send(user);
+    // Make an user admin
+    app.put("/user/admin/:uid", async (req, res) => {
+      const uidToChange = req.params.uid;
+      const filter = { uid: uidToChange };
+      const updatedDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+      res.send(result);
     });
   } finally {
     // await client.close();
